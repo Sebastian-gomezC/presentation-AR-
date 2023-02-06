@@ -1,0 +1,16 @@
+{
+"companyName": "CIAID",
+"productName": "Augmented reality Demo",
+"productVersion": "0.1",
+"dataUrl": "local.data.unityweb",
+"wasmCodeUrl": "local.wasm.code.unityweb",
+"wasmFrameworkUrl": "local.wasm.framework.unityweb",
+"graphicsAPI": ["WebGL 2.0"],
+"webglContextAttributes": {"preserveDrawingBuffer": false},
+"splashScreenStyle": "Light",
+"backgroundColor": "#FFFFFF",
+"cacheControl": {"default": "must-revalidate"},
+"developmentBuild": false,
+"multithreading": false,
+"unityVersion": "2019.4.1f1"
+}
