@@ -1,145 +1,124 @@
 <!DOCTYPE html>
 <html lang="en-us">
 
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <title>WebXR made with Unity sample</title>
-  <link rel="shortcut icon" href="TemplateData/favicon.ico">
-  <link rel="stylesheet" href="TemplateData/style.css">
-  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-163892314-1"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-    gtag('config', 'UA-163892314-1');
-  </script>
-  <script src="TemplateData/UnityProgress.js"></script>
+  <head>
+    <meta charset="utf-8">
+    <title>SimpleWebXR</title>
+    <style>
+      html {
+        box-sizing: border-box;
+      }
+      *, *:before, *:after {
+        box-sizing: inherit;
+      }
+      body {
+        margin: 0;
+        background: #444;
+      }
+      #gameContainer {
+        width: 100vw;
+        height: 100vh;
+      }
+      canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      /* try to handle mobile dialog */
+      canvas + * {
+        z-index: 2;
+      }
+      .logo {
+          display: block;
+          width: max-width: 100vw;
+          height: max-height: 70vh;
+      }
+
+      .progress {
+          margin: 1.5em;
+          border: 1px solid white;
+          width: 50vw;
+          display: none;
+      }
+      .progress .full {
+          margin: 2px;
+          background: white;
+          height: 1em;
+          transform-origin: top left;
+      }
+
+      #loader {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .spinner,
+      .spinner:after {
+        border-radius: 50%;
+        width: 5em;
+        height: 5em;
+      }
+      .spinner {
+        margin: 10px;
+        font-size: 10px;
+        position: relative;
+        text-indent: -9999em;
+        border-top: 1.1em solid rgba(255, 255, 255, 0.2);
+        border-right: 1.1em solid rgba(255, 255, 255, 0.2);
+        border-bottom: 1.1em solid rgba(255, 255, 255, 0.2);
+        border-left: 1.1em solid #ffffff;
+        transform: translateZ(0);
+        animation: spinner-spin 1.1s infinite linear;
+      }
+      @keyframes spinner-spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+    </style>
+  </head>
+
+  <body>
+    <div id="gameContainer"></div>
+    <div id="loader">
+    <div class="spinner"></div>
+    <div class="progress"><div class="full"></div></div>
+    </div>
+  </body>
+
   <script src="Build/UnityLoader.js"></script>
   <script>
-    UnityLoader.SystemInfo.mobile = false;  // workaround to prevent the warning popup from opening on mobile phone
-
-    if (["Edge", "Firefox", "Chrome", "Safari"].indexOf(UnityLoader.SystemInfo.browser) == -1) {
-      UnityLoader.SystemInfo.browser = "Firefox"; // another workaround to prevent the warning popup from opening on unknown browsers
+  var gameInstance = UnityLoader.instantiate("gameContainer", "Build/local.json", {onProgress: UnityProgress});
+  function UnityProgress(gameInstance, progress) {
+    if (!gameInstance.Module) {
+      return;
     }
-
-    //
-    var gameInstance = UnityLoader.instantiate("gameContainer", "Build/local.json", { onProgress: UnityProgress });
-
-
-    document.addEventListener('DOMContentLoaded', (event) => {
-      // Show browser WebXR capability
-      if ('xr' in navigator) {
-        navigator.xr.isSessionSupported('immersive-vr').then(function (supported) {
-          if (supported) {
-            document.getElementById("webxr-supported-vr").style.display = "inline-block";
-            document.getElementById("webxr-not-supported").style.display = "none";
-          }
-        })
-
-        navigator.xr.isSessionSupported('immersive-ar').then(function (supported) {
-          if (supported) {
-            document.getElementById("webxr-supported-ar").style.display = "inline-block";
-            document.getElementById("webxr-not-supported").style.display = "none";
-          }
-        })
-      }
-
-      // Show a message if the current window is not secured
-      if (window.isSecureContext===true) { // page secured
-        document.getElementById("page-secured").style.display = "inline-block";
-        document.getElementById("page-not-secured").style.display = "none";
-      }
-	  else if(window.isSecureContext===false) { // page not secured
-        document.getElementById("page-secured").style.display = "none";
-        document.getElementById("page-not-secured").style.display = "inline-block";
-	  }
-	  else{ // window.isSecureContext not supported (like servo)
-        document.getElementById("page-secured").style.display = "none";
-        document.getElementById("page-not-secured").style.display = "none";
-	  }
-
-
-      // Show a message if WebGL2.0 experimental feature is enabled on Webkit
-      if (navigator.userAgent.indexOf('iPhone') != -1 || navigator.userAgent.indexOf('iPad') != -1) {
-        if (UnityLoader.SystemInfo.hasWebGL == 2) {
-          document.getElementById("safari-webgl-nok").style.display = "inline-block";
-        }
-        else {
-          document.getElementById("safari-webgl-ok").style.display = "inline-block";
-        }
-      }
-
-
-      // Modal popup
-      var modal = document.getElementById("modalPopup");
-      document.getElementsByClassName("close")[0].onclick = function () {
-        modal.style.display = "none";
-      }
-      // When the user clicks anywhere outside of the modal, close it
-      window.onclick = function (event) {
-        if (event.target == modal) {
-          modal.style.display = "none";
-        }
-      }
-
-      // on iOS 13+, show request permission button
-      document.addEventListener("SimpleWebXRNeedMotionPermission", () => {
-        modal.style.display = "block";
-      }, false);
-    });
+    const loader = document.querySelector("#loader");
+    if (!gameInstance.progress) {
+      const progress = document.querySelector("#loader .progress");
+      progress.style.display = "block";
+      gameInstance.progress = progress.querySelector(".full");
+      loader.querySelector(".spinner").style.display = "none";
+    }
+    gameInstance.progress.style.transform = `scaleX(${progress})`;
+    if (progress === 1 && !gameInstance.removeTimeout) {
+      gameInstance.removeTimeout = setTimeout(function() {
+          loader.style.display = "none";
+      }, 2000);
+    }
+  }
   </script>
-</head>
-
-<body>
-  <div class="webgl-content">
-    <div style="margin: auto;width: 960px; height: 600px;">
-      <div id="gameContainer" style="width: 960px; height: 600px"></div>
-    </div>
-    <div class="footer">
-      <div class="webgl-logo"></div>
-      <div class="fullscreen" onclick="gameInstance.SendMessage('WebXR', 'StartSession')"></div>
-      <div class="title">[SimpleWebXR]</div>
-    </div>
-    <div class="footer">See how it works on GitHub : <a
-        href="https://github.com/Rufus31415/Simple-WebXR-Unity">https://github.com/Rufus31415/Simple-WebXR-Unity</a>
-    </div>
-  </div>
- 
- 
-    <!-- Browser capabilities -->
-    <div>
-    <table style="margin:auto">
-      <tr>
-        <td class="cell-ok" id="webxr-supported-ar" style="display: none;">✔️ WebXR supported (AR)</td>
-        <td class="cell-ok" id="webxr-supported-vr" style="display: none;">✔️ WebXR supported (VR)</td>
-        <td class="cell-nok" id="webxr-not-supported">❌ WebXR not supported</td>
-        <td class="cell-ok" id="hand-supported" style="display: none;">👌 Hand tracking enabled</td>
-        <td class="cell-nok" id="hand-not-supported" style="display: none;">👎 Hand tracking not supported on this
-          device</td>
-        <td class="cell-ok" id="page-secured" style="display: none;">🔒 Page is secured</td>
-        <td class="cell-nok" id="page-not-secured">🚫 Page is not secured (https or localhost)</td>
-        <td class="cell-ok" id="safari-webgl-ok" style="display: none;">✔️ WebGL 2.0 should be disabled on Safari</td>
-        <td class="cell-nok" id="safari-webgl-nok" style="display: none;">❌ WebGL 2.0 should be disabled on Safari, go
-          to settings and disable this experimental feature</td>
-      </tr>
-    </table>
-  </div>
-
-   <!-- Footer samples -->
-   <iframe src="/webxr/webxr-carousel.html"
-    onload='javascript:(function(o){o.style.height=o.contentWindow.document.body.scrollHeight+"px";}(this));'
-    style="height:500px;width:100%;border:none;overflow:hidden;"></iframe>
-
-  <!-- The Modal popup -->
-  <div id="modalPopup" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <p><a href="#" id="iosPermission" style="display:none;"
-        onclick="DeviceMotionEvent.requestPermission();modal.style.display='none'">Click here to allow accelerometer access</a></p>
-    </div>
-
-  </div>
-</body>
 
 </html>
+
